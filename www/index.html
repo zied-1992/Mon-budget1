@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mon Budget</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --green: #16a34a;
+      --red: #dc2626;
+      --border: #e2e8f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); color: var(--text); padding-bottom: 85px; }
+
+    header { background: var(--card); padding: 14px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+    .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    h1 { font-size: 1.25rem; font-weight: 800; color: var(--primary); }
+    .btn-cat { background: #eff6ff; color: var(--primary); border: none; padding: 7px 12px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
+
+    .month-bar { display: flex; justify-content: space-between; align-items: center; background: var(--bg); padding: 8px 12px; border-radius: 10px; }
+    .month-bar button { background: none; border: none; font-size: 1.1rem; padding: 4px 12px; cursor: pointer; color: var(--primary); font-weight: bold; }
+    .month-label { font-weight: 700; font-size: 0.95rem; text-transform: capitalize; }
+
+    main { padding: 16px; max-width: 500px; margin: 0 auto; }
+    .tab { display: none; }
+    .tab.active { display: block; }
+
+    .card { background: var(--card); border-radius: 16px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 16px; }
+    .solde-box { text-align: center; padding: 10px 0; }
+    .solde-title { font-size: 0.85rem; color: var(--muted); margin-bottom: 4px; }
+    .solde-val { font-size: 2rem; font-weight: 800; margin-bottom: 16px; }
+
+    .resume-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; border-top: 1px solid var(--border); padding-top: 14px; }
+    .res-item { text-align: center; }
+    .res-label { font-size: 0.8rem; color: var(--muted); }
+    .res-inc { color: var(--green); font-weight: 700; font-size: 1.05rem; margin-top: 3px; }
+    .res-exp { color: var(--red); font-weight: 700; font-size: 1.05rem; margin-top: 3px; }
+
+    .sec-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 12px; color: var(--text); }
+
+    .tx-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .tx-item:last-child { border-bottom: none; }
+    .tx-left { display: flex; align-items: center; gap: 10px; }
+    .tx-badge { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+    .tx-cat { font-weight: 600; font-size: 0.95rem; }
+    .tx-date { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+    .tx-right { display: flex; align-items: center; gap: 8px; }
+    .tx-amt { font-weight: 700; font-size: 0.95rem; }
+    .amt-inc { color: var(--green); }
+    .amt-exp { color: var(--red); }
+
+    .icon-btn { background: #f1f5f9; border: none; padding: 6px 8px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
+
+    .fab { position: fixed; bottom: 78px; right: 20px; width: 56px; height: 56px; border-radius: 50%; background: var(--primary); color: #fff; border: none; font-size: 1.8rem; box-shadow: 0 4px 12px rgba(37,99,235,0.4); cursor: pointer; z-index: 20; display: flex; align-items: center; justify-content: center; }
+
+    nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 8px 0; z-index: 15; }
+    .nav-item { background: none; border: none; color: var(--muted); font-size: 0.75rem; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; flex: 1; }
+    .nav-item.active { color: var(--primary); }
+    .nav-icon { font-size: 1.25rem; }
+
+    .pie-wrap { display: flex; flex-direction: column; align-items: center; padding: 12px 0; }
+    .pie { width: 190px; height: 190px; border-radius: 50%; margin-bottom: 20px; background: #e2e8f0; }
+    .legend { width: 100%; }
+    .leg-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    .leg-left { display: flex; align-items: center; gap: 8px; }
+
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: flex-end; justify-content: center; z-index: 50; }
+    .modal.open { display: flex; }
+    .modal-box { background: var(--card); width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; padding: 20px; max-height: 90vh; overflow-y: auto; }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .modal-head h3 { font-size: 1.1rem; }
+    .close-btn { background: none; border: none; font-size: 1.5rem; color: var(--muted); cursor: pointer; }
+
+    .type-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: var(--bg); padding: 4px; border-radius: 10px; margin-bottom: 14px; }
+    .t-btn { padding: 10px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; background: transparent; color: var(--muted); }
+    .t-btn.active-exp { background: var(--red); color: #fff; }
+    .t-btn.active-inc { background: var(--green); color: #fff; }
+
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+    .field input, .field select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; background: #fff; }
+
+    .save-btn { width: 100%; background: var(--primary); color: #fff; border: none; padding: 14px; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; }
+    .empty { text-align: center; color: var(--muted); padding: 20px 0; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <h1>Mon Budget</h1>
+    <button class="btn-cat" onclick="openCatModal()">Catégories</button>
+  </div>
+  <div class="month-bar">
+    <button onclick="moveMonth(-1)">&#9664;</button>
+    <span class="month-label" id="monthLabel"></span>
+    <button onclick="moveMonth(1)">&#9654;</button>
+  </div>
+</header>
+
+<main>
+  <!-- ONGLET 1 : ACCUEIL -->
+  <section id="tab-home" class="tab active">
+    <div class="card solde-box">
+      <div class="solde-title">Solde du mois</div>
+      <div class="solde-val" id="soldeVal">0.000 DT</div>
+      <div class="resume-grid">
+        <div class="res-item">
+          <div class="res-label">Revenus</div>
+          <div class="res-inc" id="incVal">+0.000 DT</div>
+        </div>
+        <div class="res-item">
+          <div class="res-label">Dépenses</div>
+          <div class="res-exp" id="expVal">-0.000 DT</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-title">Opérations récentes</div>
+      <div id="recentList"></div>
+    </div>
+  </section>
+
+  <!-- ONGLET 2 : HISTORIQUE -->
+  <section id="tab-hist" class="tab">
+    <div class="card">
+      <div class="field">
+        <label>Filtrer par catégorie</label>
+        <select id="filterSelect" onchange="renderAll()"></select>
+      </div>
+      <div id="fullList"></div>
+    </div>
+  </section>
+
+  <!-- ONGLET 3 : GRAPHIQUES -->
+  <section id="tab-stats" class="tab">
+    <div class="card">
+      <div class="sec-title">Répartition des dépenses</div>
+      <div class="pie-wrap">
+        <div class="pie" id="pieChart"></div>
+        <div class="legend" id="pieLegend"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<button class="fab" onclick="openTxModal()">+</button>
+
+<nav>
+  <button class="nav-item active" onclick="showTab('home', this)">
+    <span class="nav-icon">&#127968;</span>Accueil
+  </button>
+  <button class="nav-item" onclick="showTab('hist', this)">
+    <span class="nav-icon">&#128203;</span>Historique
+  </button>
+  <button class="nav-item" onclick="showTab('stats', this)">
+    <span class="nav-icon">&#128202;</span>Graphiques
+  </button>
+</nav>
+
+<!-- FENETRE AJOUT / MODIFICATION -->
+<div class="modal" id="txModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="txModalTitle">Nouvelle opération</h3>
+      <button class="close-btn" onclick="closeTxModal()">&times;</button>
+    </div>
+    <input type="hidden" id="editId">
+    <div class="type-toggle">
+      <button type="button" class="t-btn active-exp" id="btnExp" onclick="setTxType('expense')">Dépense</button>
+      <button type="button" class="t-btn" id="btnInc" onclick="setTxType('income')">Revenu</button>
+    </div>
+    <div class="field">
+      <label>Montant (DT)</label>
+      <input type="number" id="txAmount" step="0.001" placeholder="Ex: 25.500">
+    </div>
+    <div class="field">
+      <label>Catégorie</label>
+      <select id="txCategory"></select>
+    </div>
+    <div class="field">
+      <label>Date</label>
+      <input type="date" id="txDate">
+    </div>
+    <button class="save-btn" onclick="saveTransaction()">Enregistrer</button>
+  </div>
+</div>
+
+<!-- FENETRE CATEGORIES -->
+<div class="modal" id="catModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Gérer les catégories</h3>
+      <button class="close-btn" onclick="closeCatModal()">&times;</button>
+    </div>
+    <div class="field">
+      <label>Nom de la nouvelle catégorie</label>
+      <input type="text" id="newCatName" placeholder="Ex: Santé, Shopping...">
+    </div>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:14px;">
+      <select id="newCatType" style="padding:10px; border-radius:8px; border:1px solid var(--border);">
+        <option value="expense">Dépense</option>
+        <option value="income">Revenu</option>
+      </select>
+      <input type="color" id="newCatColor" value="#8b5cf6" style="width:100%; height:42px; border:none; border-radius:8px;">
+    </div>
+    <button class="save-btn" onclick="addCategory()" style="margin-bottom:16px;">Ajouter la catégorie</button>
+    <div id="manageCatList"></div>
+  </div>
+</div>
+
+<script>
+  const defaultCategories = [
+    { id: 'c1', name: 'Nourriture', type: 'expense', color: '#ef4444' },
+    { id: 'c2', name: 'Carburant', type: 'expense', color: '#f59e0b' },
+    { id: 'c3', name: 'Bébé', type: 'expense', color: '#ec4899' },
+    { id: 'c4', name: 'Divertissement', type: 'expense', color: '#8b5cf6' },
+    { id: 'c5', name: 'Factures', type: 'expense', color: '#3b82f6' },
+    { id: 'c6', name: 'Salaire', type: 'income', color: '#16a34a' },
+    { id: 'c7', name: 'Autre', type: 'income', color: '#14b8a6' }
+  ];
+
+  let categories = JSON.parse(localStorage.getItem('mb_cats')) || defaultCategories;
+  let transactions = JSON.parse(localStorage.getItem('mb_txs')) || [];
+  let viewDate = new Date();
+  let currentType = 'expense';
+
+  function saveLocal() {
+    localStorage.setItem('mb_cats', JSON.stringify(categories));
+    localStorage.setItem('mb_txs', JSON.stringify(transactions));
+  }
+
+  function formatDT(val) {
+    return Number(val).toFixed(3) + ' DT';
+  }
+
+  function moveMonth(delta) {
+    viewDate.setMonth(viewDate.getMonth() + delta);
+    renderAll();
+  }
+
+  function showTab(name, btn) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  function renderAll() {
+    const y = viewDate.getFullYear();
+    const m = viewDate.getMonth();
+    document.getElementById('monthLabel').textContent = viewDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+
+    const monthTxs = transactions.filter(t => {
+      const d = new Date(t.date);
+      return d.getFullYear() === y && d.getMonth() === m;
+    }).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    let inc = 0, exp = 0;
+    monthTxs.forEach(t => {
+      if (t.type === 'income') inc += Number(t.amount);
+      else exp += Number(t.amount);
+    });
+
+    document.getElementById('soldeVal').textContent = formatDT(inc - exp);
+    document.getElementById('incVal').textContent = '+' + formatDT(inc);
+    document.getElementById('expVal').textContent = '-' + formatDT(exp);
+
+    const filterSel = document.getElementById('filterSelect');
+    const prevFilter = filterSel.value || 'all';
+    filterSel.innerHTML = '<option value="all">Toutes les catégories</option>' +
+      categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    filterSel.value = categories.some(c => c.id === prevFilter) ? prevFilter : 'all';
+
+    renderTxList(monthTxs.slice(0, 6), 'recentList');
+    const filtered = filterSel.value === 'all' ? monthTxs : monthTxs.filter(t => t.catId === filterSel.value);
+    renderTxList(filtered, 'fullList');
+    renderChart(monthTxs, exp);
+  }
+
+  function renderTxList(list, targetId) {
+    const box = document.getElementById(targetId);
+    if (!list.length) {
+      box.innerHTML = '<div class="empty">Aucune opération sur cette période</div>';
+      return;
+    }
+    box.innerHTML = list.map(t => {
+      const cat = categories.find(c => c.id === t.catId) || { name: 'Autre', color: '#94a3b8' };
+      const sign = t.type === 'income' ? '+' : '-';
+      const cls = t.type === 'income' ? 'amt-inc' : 'amt-exp';
+      return `
+        <div class="tx-item">
+          <div class="tx-left">
+            <span class="tx-badge" style="background:${cat.color}"></span>
+            <div>
+              <div class="tx-cat">${cat.name}</div>
+              <div class="tx-date">${t.date}</div>
+            </div>
+          </div>
+          <div class="tx-right">
+            <span class="tx-amt ${cls}">${sign}${formatDT(t.amount)}</span>
+            <button class="icon-btn" onclick="openTxModal('${t.id}')">&#9998;</button>
+            <button class="icon-btn" onclick="deleteTx('${t.id}')">&#128465;</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderChart(monthTxs, totalExp) {
+    const pie = document.getElementById('pieChart');
+    const leg = document.getElementById('pieLegend');
+    if (totalExp <= 0) {
+      pie.style.background = '#e2e8f0';
+      leg.innerHTML = '<div class="empty">Aucune dépense ce mois-ci</div>';
+      return;
+    }
+    const sums = {};
+    monthTxs.filter(t => t.type === 'expense').forEach(t => {
+      sums[t.catId] = (sums[t.catId] || 0) + Number(t.amount);
+    });
+
+    let start = 0;
+    const stops = [];
+    let legHtml = '';
+
+    Object.keys(sums).forEach(cid => {
+      const cat = categories.find(c => c.id === cid) || { name: 'Autre', color: '#94a3b8' };
+      const val = sums[cid];
+      const pct = (val / totalExp) * 100;
+      const end = start + pct;
+      stops.push(`${cat.color} ${start}% ${end}%`);
+      start = end;
+      legHtml += `
+        <div class="leg-row">
+          <div class="leg-left">
+            <span class="tx-badge" style="background:${cat.color}"></span>
+            <span>${cat.name} (${pct.toFixed(1)}%)</span>
+          </div>
+          <strong>${formatDT(val)}</strong>
+        </div>
+      `;
+    });
+
+    pie.style.background = `conic-gradient(${stops.join(', ')})`;
+    leg.innerHTML = legHtml;
+  }
+
+  function setTxType(type) {
+    currentType = type;
+    document.getElementById('btnExp').className = 't-btn' + (type === 'expense' ? ' active-exp' : '');
+    document.getElementById('btnInc').className = 't-btn' + (type === 'income' ? ' active-inc' : '');
+    const sel = document.getElementById('txCategory');
+    sel.innerHTML = categories.filter(c => c.type === type).map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  }
+
+  function openTxModal(id = null) {
+    document.getElementById('txModal').classList.add('open');
+    if (id) {
+      const tx = transactions.find(t => t.id === id);
+      if (!tx) return;
+      document.getElementById('txModalTitle').textContent = 'Modifier l\'opération';
+      document.getElementById('editId').value = tx.id;
+      setTxType(tx.type);
+      document.getElementById('txAmount').value = tx.amount;
+      document.getElementById('txCategory').value = tx.catId;
+      document.getElementById('txDate').value = tx.date;
+    } else {
+      document.getElementById('txModalTitle').textContent = 'Nouvelle opération';
+      document.getElementById('editId').value = '';
+      setTxType('expense');
+      document.getElementById('txAmount').value = '';
+      document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
+    }
+  }
+
+  function closeTxModal() {
+    document.getElementById('txModal').classList.remove('open');
+  }
+
+  function saveTransaction() {
+    const amt = parseFloat(document.getElementById('txAmount').value);
+    const catId = document.getElementById('txCategory').value;
+    const date = document.getElementById('txDate').value;
+    const editId = document.getElementById('editId').value;
+
+    if (!amt || amt <= 0 || !catId || !date) {
+      alert('Veuillez remplir un montant valide et une date.');
+      return;
+    }
+
+    if (editId) {
+      const idx = transactions.findIndex(t => t.id === editId);
+      if (idx > -1) transactions[idx] = { id: editId, type: currentType, amount: amt, catId, date };
+    } else {
+      transactions.push({ id: 't' + Date.now(), type: currentType, amount: amt, catId, date });
+    }
+
+    saveLocal();
+    closeTxModal();
+    renderAll();
+  }
+
+  function deleteTx(id) {
+    if (confirm('Supprimer cette opération ?')) {
+      transactions = transactions.filter(t => t.id !== id);
+      saveLocal();
+      renderAll();
+    }
+  }
+
+  function openCatModal() {
+    document.getElementById('catModal').classList.add('open');
+    renderManageCats();
+  }
+
+  function closeCatModal() {
+    document.getElementById('catModal').classList.remove('open');
+  }
+
+  function renderManageCats() {
+    document.getElementById('manageCatList').innerHTML = categories.map(c => `
+      <div class="tx-item">
+        <div class="tx-left">
+          <span class="tx-badge" style="background:${c.color}"></span>
+          <span>${c.name} <small style="color:var(--muted)">(${c.type === 'expense' ? 'Dépense' : 'Revenu'})</small></span>
+        </div>
+        <button class="icon-btn" onclick="deleteCategory('${c.id}')">&#128465;</button>
+      </div>
+    `).join('');
+  }
+
+  function addCategory() {
+    const name = document.getElementById('newCatName').value.trim();
+    const type = document.getElementById('newCatType').value;
+    const color = document.getElementById('newCatColor').value;
+    if (!name) return;
+    categories.push({ id: 'c' + Date.now(), name, type, color });
+    document.getElementById('newCatName').value = '';
+    saveLocal();
+    renderManageCats();
+    renderAll();
+  }
+
+  function deleteCategory(id) {
+    if (categories.length <= 2) {
+      alert('Gardez au moins une catégorie.');
+      return;
+    }
+    categories = categories.filter(c => c.id !== id);
+    saveLocal();
+    renderManageCats();
+    renderAll();
+  }
+
+  renderAll();
+</script>
+</body>
+</html>
